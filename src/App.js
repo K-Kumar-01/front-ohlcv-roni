@@ -1,10 +1,10 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Chart from "react-apexcharts";
 import data from "./data"
 import transformData from "./utility";
 import "./App.css"
 import Spinner from "./Spinner";
-import { API_ENDPOINT } from "./constants";
+import { API_ENDPOINT, OPTIONS_OHLC, OPTIONS_VOLUME } from "./constants";
 
 const App = () => {
 
@@ -25,46 +25,14 @@ const App = () => {
     }]
   }]);
 
-  const [optionsOHLC, setOptionsOHLC] = useState({
-    chart: {
-      type: 'candlestick',
-      height: 350
-    },
-    title: {
-      text: 'OHLC Chart',
-      align: 'left'
-    },
-    xaxis: {
-      type: 'datetime'
-    },
-    yaxis: {
-      tooltip: {
-        enabled: true
-      }
-    }
-  })
+  const [optionsOHLC, setOptionsOHLC] = useState();
 
-  const [optionsVolume, setOptionsVolume] = useState({
-    chart: {
-      type: 'bar',
-      height: 350
-    },
-    title: {
-      text: 'Volume Chart',
-      align: 'left'
-    },
-    xaxis: {
-      type: 'datetime'
-    },
-    yaxis: {
-      tooltip: {
-        enabled: true
-      }
-    },
-    dataLabels: {
-      enabled: false
-    }
-  })
+  const [optionsVolume, setOptionsVolume] = useState();
+
+  useEffect(() => {
+    setOptionsOHLC(OPTIONS_OHLC);
+    setOptionsVolume(OPTIONS_VOLUME);
+  }, [])
 
 
   const handleChange = (e) => {
