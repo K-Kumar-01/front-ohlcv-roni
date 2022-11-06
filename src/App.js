@@ -1,23 +1,141 @@
-import logo from './logo.svg';
-import './App.css';
+import React, { useState } from "react";
+import Chart from "react-apexcharts";
+import data from "./data"
+import transformData from "./utility";
+import "./App.css"
+import Spinner from "./Spinner";
+import { API_ENDPOINT } from "./constants";
 
-function App() {
+const App = () => {
+
+  const [fromDate, setFromDate] = useState("");
+  const [show, setShow] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [seriesOHLC, setSeriesOHLC] = useState([{
+    data: [{
+      x: new Date(1538778600000),
+      y: [6629.81, 6650.5, 6623.04, 6633.33]
+    }]
+  }]);
+
+  const [seriesVolume, setSeriesVolume] = useState([{
+    data: [{
+      x: 20,
+      y: 54
+    }]
+  }]);
+
+  const [optionsOHLC, setOptionsOHLC] = useState({
+    chart: {
+      type: 'candlestick',
+      height: 350
+    },
+    title: {
+      text: 'OHLC Chart',
+      align: 'left'
+    },
+    xaxis: {
+      type: 'datetime'
+    },
+    yaxis: {
+      tooltip: {
+        enabled: true
+      }
+    }
+  })
+
+  const [optionsVolume, setOptionsVolume] = useState({
+    chart: {
+      type: 'bar',
+      height: 350
+    },
+    title: {
+      text: 'Volume Chart',
+      align: 'left'
+    },
+    xaxis: {
+      type: 'datetime'
+    },
+    yaxis: {
+      tooltip: {
+        enabled: true
+      }
+    },
+    dataLabels: {
+      enabled: false
+    }
+  })
+
+
+  const handleChange = (e) => {
+    setFromDate(e.target.value);
+  }
+
+  const handleLocal = () => {
+    setLoading(true);
+    const { ohlc_data, volume_data } = transformData(data);
+    setSeriesOHLC([{ data: ohlc_data }])
+    setSeriesVolume([{ data: volume_data }]);
+    setLoading(false);
+    setShow(true);
+  }
+
+  const handleAPI = async () => {
+
+    setShow(false);
+    setLoading(true);
+
+    let url = `${API_ENDPOINT}/api/get`;
+    if (fromDate !== "") {
+      const from_query = `?from=${new Date(fromDate).toISOString()}`;
+      url += from_query;
+    }
+    const response = await fetch(url);
+    const data = await response.json();
+    const { ohlc_data, volume_data } = transformData(data.data);
+    setSeriesOHLC([{ data: ohlc_data }])
+    setSeriesVolume([{ data: volume_data }]);
+    setLoading(false);
+    setShow(true);
+  }
+
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
+    <div className="app">
+      {loading && <Spinner />}
+      <h1 className="heading">OHLCV Data plot using Apex Charts</h1>
+      <div className="centerAlign">
+        <div>
+          <button className="btn localbtn" onClick={handleLocal}>
+            Use Local Data
+          </button>
+        </div>
+        <span>OR</span>
+        <div>
+          <label htmlFor="datefilter" >Get Value from a particular date</label>
+          <input id="datefilter" type="datetime-local" className="datefield" value={fromDate} onChange={handleChange} />
+          <button className="btn apibtn" onClick={handleAPI}>
+            Fetch
+          </button>
+        </div>
+      </div>
+
+      {show && (<div className="chart_area flex">
+        <div className="section ohlc_section">
+          <Chart
+            options={optionsOHLC}
+            series={seriesOHLC}
+            type="candlestick"
+          />
+        </div>
+
+        <div className="section volume_section">
+          <Chart
+            options={optionsVolume}
+            series={seriesVolume}
+            type="bar"
+          />
+        </div>
+      </div>)}
     </div>
   );
 }
